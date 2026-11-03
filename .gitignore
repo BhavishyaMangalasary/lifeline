@@ -1,0 +1,7 @@
+.venv/
+.env
+data/
+.cache/
+out/
+__pycache__/
+*.tar.gz
