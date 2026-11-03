@@ -102,14 +102,22 @@ def parse_raw(raw: str, width: int, height: int) -> list:
             continue
         raster = np.frombuffer(msp.decode_mask_to_raster(rec.mask), dtype=np.uint8)
         raster = raster.reshape(rec.mask.height, rec.mask.width)
+        left, top = int(rec.bounds.left), int(rec.bounds.top)
+        right, bottom = int(rec.bounds.right), int(rec.bounds.bottom)
+        box_w, box_h = right - left, bottom - top
+        if raster.shape != (box_h, box_w):
+            # the mask grid can have a different resolution than its box: stretch it to fit
+            img = Image.fromarray(raster * 255)
+            raster = np.array(img.resize((box_w, box_h), Image.NEAREST)) > 127
+        else:
+            raster = raster.astype(bool)
         full = np.zeros((height, width), dtype=bool)
-        top, left = max(rec.bounds.top, 0), max(rec.bounds.left, 0)
-        bottom = min(rec.bounds.top + raster.shape[0], height)
-        right = min(rec.bounds.left + raster.shape[1], width)
-        if bottom > top and right > left:
-            full[top:bottom, left:right] = raster[: bottom - top, : right - left].astype(bool)
-        b = boxes.get(rec.object_id)
-        box = (int(b.left), int(b.top), int(b.right), int(b.bottom)) if b else (left, top, right, bottom)
+        t, l = max(top, 0), max(left, 0)
+        b, r = min(bottom, height), min(right, width)
+        if b > t and r > l:
+            full[t:b, l:r] = raster[t - top : b - top, l - left : r - left]
+        b_rec = boxes.get(rec.object_id)
+        box = (int(b_rec.left), int(b_rec.top), int(b_rec.right), int(b_rec.bottom)) if b_rec else (left, top, right, bottom)
         detections.append(Detection(int(rec.object_id), box, full))
     return detections
 
