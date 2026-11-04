@@ -152,7 +152,8 @@ function legend() {
   const dot = c => `<span class="dot" style="background:${c}"></span>`;
   document.getElementById("legend").innerHTML =
     roads.map(k => `<span>${dot(ROAD[k])}${k} road</span>`).join("") +
-    blds.map(k => `<span>${dot(BUILD[k])}${NAMES[k]}</span>`).join("");
+    blds.map(k => `<span>${dot(BUILD[k])}${NAMES[k]}</span>`).join("") +
+    (view === "truth" ? "" : `<span>${dot("#1a1d21")}numbered = crew entry point</span>`);
 }
 
 function counts() {
