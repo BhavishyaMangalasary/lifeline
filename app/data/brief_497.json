@@ -1,5 +1,5 @@
 {
-  "brief": "Enter (29.63024, -89.95027) for Priority 1, closest to 9 isolated buildings [F3]. Enter (29.63125, -89.95027) for Priority 2, closest to 8 isolated buildings [F4]. Enter (29.63390, -89.95065) for Priority 3, closest to 5 isolated buildings [F5]. Enter (29.63504, -89.95027) for Priority 4, closest to 2 isolated buildings [F6]. 105 road pieces were checked: 81 judged flooded, 24 uncertain, rest judged dry [F1]. Buildings: 26 isolated, 1 uncertain, 0 still reachable, 13 with no mapped road nearby [F2]. Testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was marked reachable, but about half marked isolated were reachable, so treat isolated as a reason to check not a confirmed cut-off [F7]. Flood judgements come from a vision model reading satellite photos, not field-verified, so uncertain roads need a drone or ground check [F8].",
+  "brief": "Priority 1 enters at (29.63024,-89.95027), closest to 9 isolated buildings [F3]. Priority 2 enters at (29.63125,-89.95027), closest to 8 isolated buildings [F4]. Priority 3 enters at (29.63390,-89.95065), closest to 5 isolated buildings [F5]. Priority 4 enters at (29.63504,-89.95027), closest to 2 isolated buildings [F6]. There are 26 isolated cut-off from every exit road, 1 uncertain, 0 still reachable, 13 with no mapped road nearby [F2]. 105 road pieces were checked: 81 judged flooded, 24 uncertain, the rest judged dry [F1]. Flood judgements from satellite-vision model are not field-verified; uncertain roads need a drone or ground check [F8]. In 20 SpaceNet 8 tiles 1 of 666 cut-off buildings was marked reachable; isolated was right 4 to 5 in 10 where most get out and 98 in 100 where nearly all cut off; treat isolated as check not confirmed cut-off [F7].",
   "facts": {
     "F1": "105 road pieces were checked: 81 judged flooded, 24 uncertain, the rest judged dry.",
     "F2": "Buildings: 26 isolated (cut off from every exit road), 1 uncertain, 0 still reachable, 13 with no mapped road nearby.",
@@ -7,7 +7,7 @@
     "F4": "Priority 2: enter at map reference (29.63125, -89.95027); a crew entering here is closest to 8 isolated buildings.",
     "F5": "Priority 3: enter at map reference (29.63390, -89.95065); a crew entering here is closest to 5 isolated buildings.",
     "F6": "Priority 4: enter at map reference (29.63504, -89.95027); a crew entering here is closest to 2 isolated buildings.",
-    "F7": "In testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was marked reachable, but about half of the buildings marked isolated were in fact reachable. Treat 'isolated' as a reason to check, not a confirmed cut-off.",
+    "F7": "In testing on 20 SpaceNet 8 tiles, 1 of 666 truly cut-off buildings was marked reachable. How often an 'isolated' call was right depended on the area: roughly 4 to 5 in 10 where most buildings could still get out, and 98 in 100 where nearly all were cut off. Treat 'isolated' as a reason to check, not a confirmed cut-off.",
     "F8": "Flood judgements come from a vision model reading satellite photos and are not field-verified; uncertain roads need a drone or ground check."
   },
   "problems": []

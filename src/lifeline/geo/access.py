@@ -1,6 +1,7 @@
-"""Which buildings are cut off by flooded roads."""
+"""Which buildings are cut off by flooded roads, and where responders should go first."""
 import networkx as nx
 import pandas as pd
+
 
 def _key(point):
     return (round(point[0], 1), round(point[1], 1))
@@ -9,6 +10,8 @@ def _key(point):
 def build_graph(roads):
     g = nx.Graph()
     for i, row in roads.iterrows():
+        if row["geometry"].is_empty:
+            continue
         pts = list(row["geometry"].coords)
         g.add_edge(
             _key(pts[0]),
@@ -19,6 +22,7 @@ def build_graph(roads):
             time=row["travel_time_s"],
         )
     return g
+
 
 def exit_nodes(g, size=1300, margin=3):
     return {n for n in g.nodes if min(n) <= margin or max(n) >= size - margin}
@@ -31,8 +35,13 @@ def _reaches_exit(g, exits):
             good |= comp
     return good
 
+
 def nearest_piece(shape, roads, max_px=80):
-    dist = roads["geometry"].apply(shape.distance)
+    if shape.is_empty or roads.empty:
+        return None
+    dist = roads["geometry"].apply(shape.distance).dropna()
+    if dist.empty:
+        return None
     i = dist.idxmin()
     return i if dist[i] <= max_px else None
 
@@ -62,6 +71,7 @@ def classify(roads, buildings, max_px=80, size=1300):
     out["piece"] = piece
     return out
 
+
 def _dry_nodes(g, exits):
     open_edges = [(u, v) for u, v, d in g.edges(data=True) if not d["flooded"]]
     return _reaches_exit(g.edge_subgraph(open_edges), exits)
@@ -71,6 +81,8 @@ def dispatch(roads, result):
     g = build_graph(roads)
     exits = exit_nodes(g)
     sources = exits | _dry_nodes(g, exits)
+    if not sources:
+        return pd.DataFrame(), pd.DataFrame()
     dist, paths = nx.multi_source_dijkstra(g, sources, weight="time")
 
     rows = []
@@ -92,6 +104,7 @@ def dispatch(roads, result):
     groups["priority"] = groups["buildings"] / (groups["eta_s"] / 60 + 1)
     groups = groups.sort_values("priority", ascending=False).reset_index(drop=True)
     return groups, per_building
+
 
 def classify_uncertain(roads, buildings, states):
     opt = roads.copy()

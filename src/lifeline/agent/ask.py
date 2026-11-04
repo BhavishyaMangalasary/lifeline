@@ -55,9 +55,10 @@ def dispatch_priorities(tile):
 def known_limits():
     return {
         "evidence": "limits:testing",
-        "text": ("Tested on 5 SpaceNet 8 tiles against ground-truth labels: none of 27 truly cut-off "
-                 "buildings was marked reachable, but about half of the buildings marked isolated "
-                 "were in fact reachable. Flood judgements are not field-verified."),
+                "text": ("Tested on 20 SpaceNet 8 tiles against ground-truth labels: 1 of 666 truly cut-off "
+                 "buildings was marked reachable. The share of 'isolated' calls that were correct was "
+                 "roughly 40-50% where most buildings could still get out and 98% where nearly all were "
+                 "cut off. Flood judgements are not field-verified."),
     }
 
 

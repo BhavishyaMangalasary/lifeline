@@ -32,9 +32,10 @@ def load_facts(i):
         facts[f"F{n}"] = (f"Priority {p['rank']}: enter at map reference ({lat:.5f}, {lon:.5f}); "
                         f"a crew entering here is closest to {p['buildings']} isolated building{'s' if p['buildings'] != 1 else ''}.")
         n += 1
-    facts[f"F{n}"] = ("In testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was "
-                      "marked reachable, but about half of the buildings marked isolated were in fact "
-                      "reachable. Treat 'isolated' as a reason to check, not a confirmed cut-off.")
+    facts[f"F{n}"] = ("In testing on 20 SpaceNet 8 tiles, 1 of 666 truly cut-off buildings was marked "
+                      "reachable. How often an 'isolated' call was right depended on the area: roughly 4 to 5 "
+                      "in 10 where most buildings could still get out, and 98 in 100 where nearly all were cut off. "
+                      "Treat 'isolated' as a reason to check, not a confirmed cut-off.")
     n += 1
     facts[f"F{n}"] = ("Flood judgements come from a vision model reading satellite photos and are "
                       "not field-verified; uncertain roads need a drone or ground check.")
