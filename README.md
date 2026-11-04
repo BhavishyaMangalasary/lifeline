@@ -6,7 +6,7 @@ Flood access and dispatch planner. From before and after satellite photos and a 
 Built for the Meta Global AI Developer Hackathon (Indie track, solo).
 
 - **Live map:** https://bhavishyamangalasary.github.io/lifeline/
-- **Demo video:** [VIDEO URL]
+- **Demo video:** https://www.loom.com/share/5b52f454204e4a71b4fe765a650b43c1
 
 ![Lifeline map of tile 497 with ranked entry points](docs/map.png)
 
