@@ -24,13 +24,17 @@
   td:first-child, th:first-child { text-align:left; }
   .entry { padding:8px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; cursor:pointer; font-size:14px; }
   .entry:hover { background:var(--bg); }
-  .entry small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
   .verify { padding:6px 8px; border:1px solid var(--line); border-left:4px solid #f4c20d; border-radius:8px;
             margin-bottom:5px; cursor:pointer; font-size:13px; }
   .verify:hover { background:var(--bg); }
   .brief { font-size:13px; line-height:1.5; }
-  .brief sup { color:var(--muted); }
+  .brief sup, .ask-answer sup { color:var(--muted); }
   .note { font-size:12px; color:var(--muted); }
+  #ask-form { display:flex; gap:6px; margin-bottom:8px; }
+  #ask-q { flex:1; padding:8px; font-size:14px; }
+  #ask-form button { padding:8px 12px; font-size:14px; cursor:pointer; }
+  .ask-answer { display:none; font-size:13px; line-height:1.5; margin:8px 0; padding:10px;
+                border:1px solid var(--line); border-radius:8px; background:var(--bg); }
   details { border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-top:12px; }
   summary { cursor:pointer; font-size:13px; font-weight:600; }
   details table { margin:8px 0; }
@@ -66,6 +70,15 @@
   <div id="verify"></div>
   <h2>Dispatch brief</h2>
   <div class="brief" id="brief">Loading...</div>
+
+  <h2>Ask the map</h2>
+  <form id="ask-form" style="display:none">
+    <input id="ask-q" placeholder="Ask about the analysed tiles..." autocomplete="off">
+    <button type="submit">Ask</button>
+  </form>
+  <div id="ask-chips"></div>
+  <div class="ask-answer" id="ask-answer"></div>
+  <p class="note" id="ask-note"></p>
 
   <details>
     <summary>How well does it work?</summary>
@@ -238,6 +251,57 @@ async function loadBrief(t) {
   }
 }
 
+function showAnswer(question, r, label) {
+  const el = document.getElementById("ask-answer");
+  const text = esc(r.answer || "").replace(/\[([^\]]+)\]/g, "<sup>[$1]</sup>").replace(/\n/g, "<br>");
+  const check = (r.unsupported && r.unsupported.length)
+    ? `<p class="note">Warning: these citations were not backed by a tool call: ${esc(r.unsupported.join(", "))}</p>`
+    : '<p class="note">Every citation matches a tool result the model actually called.</p>';
+  el.innerHTML = `<p><b>${esc(question)}</b></p><p>${text}</p>${check}<p class="note">${label}</p>`;
+  el.style.display = "block";
+}
+
+async function initAsk() {
+  const chips = document.getElementById("ask-chips");
+  const note = document.getElementById("ask-note");
+  let examples = [];
+  try { examples = await (await fetch("data/ask_examples.json")).json(); } catch (e) { examples = []; }
+  examples.forEach(ex => {
+    const d = document.createElement("div");
+    d.className = "entry";
+    d.textContent = ex.question;
+    d.onclick = () => showAnswer(ex.question, ex, "Recorded answer from Muse Spark.");
+    chips.appendChild(d);
+  });
+  note.textContent = examples.length
+    ? "Recorded answers from Muse Spark, which calls tools over the exported results. Run the app locally to ask your own questions."
+    : "";
+
+  try {
+    const j = await (await fetch("ask")).json();
+    if (j.live) {
+      document.getElementById("ask-form").style.display = "flex";
+      note.textContent = "Live: Muse Spark answers by calling tools over the exported results, and every citation is checked.";
+    }
+  } catch (e) { /* public page: recorded answers only */ }
+}
+
+document.getElementById("ask-form").onsubmit = async ev => {
+  ev.preventDefault();
+  const input = document.getElementById("ask-q");
+  const q = input.value.trim();
+  if (!q) return;
+  const el = document.getElementById("ask-answer");
+  el.innerHTML = "<p>Thinking...</p>";
+  el.style.display = "block";
+  try {
+    const r = await (await fetch(`ask?q=${encodeURIComponent(q)}`)).json();
+    showAnswer(q, r, "Live answer from Muse Spark.");
+  } catch (e) {
+    el.innerHTML = "<p>The live agent could not be reached.</p>";
+  }
+};
+
 async function loadTile(t) {
   if (pin) { map.removeLayer(pin); pin = null; }
   data = await (await fetch(`data/tile_${t}.geojson`)).json();
@@ -258,6 +322,7 @@ document.querySelectorAll('input[name="view"]').forEach(r => {
   r.onchange = () => { view = r.value; legend(); render(); };
 });
 loadTile(TILES[0]);
+initAsk();
 </script>
 </body>
 </html>

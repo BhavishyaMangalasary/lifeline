@@ -1,0 +1,32 @@
+[
+  {
+    "question": "Which analysed tile has the most isolated buildings, and how sure are we?",
+    "answer": "Tile 233 has the most isolated buildings: 87 isolated [tiles:overview][tile233:summary].\n\nUncertainty: testing on 20 SpaceNet 8 tiles found isolated calls were correct roughly 40-50% where most buildings could still get out and 98% where nearly all were cut off; flood judgements are not field-verified [limits:testing].",
+    "unsupported": []
+  },
+  {
+    "question": "In tile 233, where should the first crew go and why?",
+    "answer": "First crew to Rank 1 entry at lat 29.68343, lon -90.09864 [tile233:priorities].\n\nIt serves 38 isolated buildings, the most of any entry point [tile233:priorities]. Tile 233 has 87 isolated buildings (plus 2 with no road) with 77 flooded and 9 uncertain of 89 road pieces [tile233:summary].\n\nUncertainty: isolated calls were ~40-50% correct where most could get out and 98% where nearly all cut off; flood judgements not field-verified [limits:testing].",
+    "unsupported": []
+  },
+  {
+    "question": "Is tile 497 more flooded than tile 170?",
+    "answer": "Yes. Tile 497 has 81 flooded of 105 road pieces vs tile 170 with 35 flooded of 72 [tile497:summary] [tile170:summary].\n\nTile 497 also has 26 isolated buildings vs 17 in tile 170 [tile497:summary] [tile170:summary], but isolated calls are uncertain: only ~40-50% correct where most could get out, up to 98% where nearly all cut off, and not field-verified [limits:testing].",
+    "unsupported": []
+  },
+  {
+    "question": "How reliable are the isolated-building calls?",
+    "answer": "Tested on 20 SpaceNet 8 tiles: 1 of 666 truly cut-off buildings was marked reachable.\n\nPrecision of 'isolated' calls varied: roughly 40-50% correct where most buildings could still get out, and 98% where nearly all were cut off.\n\nFlood judgements are not field-verified \u2014 treat isolated status as uncertain [limits:testing].",
+    "unsupported": []
+  },
+  {
+    "question": "Which tile has the most uncertain buildings that need checking?",
+    "answer": "Tile 500 has the most uncertain buildings needing checking: 13 uncertain buildings [tiles:overview] [tile500:summary].\n\nIt also shows 9 isolated buildings [tile500:summary]. Uncertainty: isolated calls were correct roughly 40-50% to 98% depending on tile, and flood judgements are not field-verified [limits:testing].",
+    "unsupported": []
+  },
+  {
+    "question": "In tile 500, how many buildings are isolated and how many are uncertain?",
+    "answer": "In tile 500, 9 buildings are isolated and 13 are uncertain [tile500:summary].\n\nUncertainty: isolated calls were correct roughly 40-50% to 98% in testing depending on conditions, and flood judgements are not field-verified [limits:testing].",
+    "unsupported": []
+  }
+]
