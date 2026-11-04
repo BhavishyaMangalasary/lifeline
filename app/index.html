@@ -24,9 +24,17 @@
   td:first-child, th:first-child { text-align:left; }
   .entry { padding:8px; border:1px solid var(--line); border-radius:8px; margin-bottom:6px; cursor:pointer; font-size:14px; }
   .entry:hover { background:var(--bg); }
+  .entry small { display:block; color:var(--muted); font-size:12px; margin-top:2px; }
+  .verify { padding:6px 8px; border:1px solid var(--line); border-left:4px solid #f4c20d; border-radius:8px;
+            margin-bottom:5px; cursor:pointer; font-size:13px; }
+  .verify:hover { background:var(--bg); }
   .brief { font-size:13px; line-height:1.5; }
   .brief sup { color:var(--muted); }
   .note { font-size:12px; color:var(--muted); }
+  details { border:1px solid var(--line); border-radius:8px; padding:8px 10px; margin-top:12px; }
+  summary { cursor:pointer; font-size:13px; font-weight:600; }
+  details table { margin:8px 0; }
+  details ul { margin:6px 0 0; padding-left:18px; font-size:12px; color:var(--muted); line-height:1.45; }
   .badge { background:#1a1d21; color:#fff; border-radius:50%; width:24px; height:24px; display:flex;
            align-items:center; justify-content:center; font-size:12px; border:2px solid #fff; }
   @media (max-width: 800px) {
@@ -53,9 +61,40 @@
   <div id="counts"></div>
   <h2>Where to send crews first</h2>
   <div id="entries"></div>
+  <p class="note">Order is a heuristic: more isolated buildings and a shorter trip over the cut-off roads rank higher. It is not live routing, and flooded roads may need boats or on-foot access.</p>
+  <h2>Verify first</h2>
+  <div id="verify"></div>
   <h2>Dispatch brief</h2>
   <div class="brief" id="brief">Loading...</div>
-  <p class="note">Flood judgements are made by Muse Spark from satellite photos and are not field-verified.
+
+  <details>
+    <summary>How well does it work?</summary>
+    <p class="note" style="margin-top:8px">Tested against SpaceNet 8 ground-truth labels. The planner is the same on both sides, so this measures the flood judgements.</p>
+    <table>
+      <tr><th>Truly cut-off buildings</th><th>Count</th></tr>
+      <tr><td>15 random tiles: called isolated</td><td>578</td></tr>
+      <tr><td>15 random tiles: called uncertain</td><td>60</td></tr>
+      <tr><td>15 random tiles: called reachable (missed)</td><td>1</td></tr>
+      <tr><td>5 earlier tiles: missed</td><td>0 of 27</td></tr>
+      <tr><td><b>All 20 tiles: missed</b></td><td><b>1 of 666</b></td></tr>
+    </table>
+    <table>
+      <tr><th>Share of "isolated" calls that were right</th><th>Precision</th></tr>
+      <tr><td>15 heavily flooded tiles</td><td>0.98</td></tr>
+      <tr><td>Same tiles if everything were called isolated</td><td>0.88</td></tr>
+      <tr><td>5 earlier tiles, most buildings could still get out</td><td>0.42-0.53</td></tr>
+    </table>
+    <p class="note">Of 86 truly reachable buildings in the 15 tiles: 23 cleared, 52 left uncertain, 11 wrongly called isolated.</p>
+    <ul>
+      <li>The 15 tiles were picked at random from tiles with at least 5 flooded road pieces, so they are heavily flooded by design.</li>
+      <li>The one miss is on tile 541, a small tile with 2 truly cut-off buildings.</li>
+      <li>Buildings are clustered inside tiles, so the evidence is closer to 20 areas than to 666 independent cases.</li>
+      <li>SpaceNet labels a building as flooded when water is in close proximity. This is a proxy, not a field survey.</li>
+      <li>One region and one event (Hurricane Ida, Louisiana). Not tested elsewhere.</li>
+    </ul>
+  </details>
+
+  <p class="note" style="margin-top:12px">Flood judgements are made by Muse Spark from satellite photos and are not field-verified.
   In testing on 20 tiles, 1 of 666 truly cut-off buildings was marked reachable; how often an "isolated" call is right depends on how flooded the area is (roughly 40-50% to 98%).
   Road and building outlines come from SpaceNet 8 (Hansch et al., CVPRW 2022). Basemap: OpenStreetMap contributors.</p>
 </aside>
@@ -67,18 +106,31 @@ const TILES = [497, 233, 170, 542, 466, 445, 500];
 const ROAD = {flooded: "#d7263d", uncertain: "#f4a300", dry: "#2a9d4b"};
 const BUILD = {isolated: "#e8590c", uncertain: "#f4c20d", ok: "#1c7ed6", no_road: "#adb5bd", unconnected: "#adb5bd"};
 const NAMES = {isolated: "isolated", uncertain: "uncertain", ok: "reachable", no_road: "no road nearby"};
+const VERIFY_SHOWN = 10;
 
 const map = L.map("map");
 L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19, attribution: "&copy; OpenStreetMap contributors"
 }).addTo(map);
 
-let data = null, layer = null, markers = [], view = "lifeline";
+let data = null, layer = null, markers = [], view = "lifeline", pin = null;
 
 const esc = s => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const plural = n => (n === 1 ? "building" : "buildings");
 const roadColor = p => view === "truth" ? (p.label_flooded ? ROAD.flooded : ROAD.dry) : ROAD[p.state];
 const buildColor = p => BUILD[view === "truth" ? p.truth : p.status];
+
+function meters(a, b) {
+  const dx = (a.lng - b.lng) * 111320 * Math.cos(((a.lat + b.lat) / 2) * Math.PI / 180);
+  const dy = (a.lat - b.lat) * 111320;
+  return Math.hypot(dx, dy);
+}
+
+function flashTo(c) {
+  if (pin) map.removeLayer(pin);
+  pin = L.circleMarker(c, {radius: 18, color: "#1a1d21", weight: 3, fillOpacity: 0}).addTo(map);
+  map.flyTo(c, 19);
+}
 
 function legend() {
   const roads = view === "truth" ? ["flooded", "dry"] : ["flooded", "uncertain", "dry"];
@@ -129,12 +181,51 @@ function entriesList() {
     .sort((a, b) => a.properties.rank - b.properties.rank);
   el.innerHTML = rows.length ? "" : '<p class="note">No isolated buildings to reach.</p>';
   rows.forEach(f => {
+    const p = f.properties;
     const d = document.createElement("div");
     d.className = "entry";
-    d.textContent = `${f.properties.rank}. Closest to ${f.properties.buildings} isolated ${plural(f.properties.buildings)}`;
+    d.textContent = `${p.rank}. Closest to ${p.buildings} isolated ${plural(p.buildings)}`;
     d.onclick = () => { const [lon, lat] = f.geometry.coordinates; map.flyTo([lat, lon], 18); };
     el.appendChild(d);
   });
+}
+
+function verifyList() {
+  const el = document.getElementById("verify");
+  const entries = data.features.filter(f => f.properties.kind === "entry").map(f => ({
+    rank: f.properties.rank,
+    c: L.latLng(f.geometry.coordinates[1], f.geometry.coordinates[0])
+  }));
+  const items = data.features
+    .filter(f => f.properties.kind !== "road" && f.properties.kind !== "entry" && f.properties.status === "uncertain")
+    .map(f => {
+      const c = L.geoJSON(f).getBounds().getCenter();
+      let best = null;
+      entries.forEach(e => {
+        const d = meters(c, e.c);
+        if (!best || d < best.d) best = {d, rank: e.rank};
+      });
+      return {c, best};
+    })
+    .sort((a, b) => (a.best ? a.best.d : Infinity) - (b.best ? b.best.d : Infinity));
+
+  if (!items.length) {
+    el.innerHTML = '<p class="note">No uncertain buildings in this area.</p>';
+    return;
+  }
+  el.innerHTML = `<p class="note">${items.length} ${plural(items.length)} where the flood evidence was mixed. Check these by drone or on the ground. Closest to a planned entry point first.</p>`;
+  items.slice(0, VERIFY_SHOWN).forEach((it, i) => {
+    const d = document.createElement("div");
+    d.className = "verify";
+    d.textContent = it.best
+      ? `Building ${i + 1}: about ${Math.round(it.best.d)} m from entry ${it.best.rank}`
+      : `Building ${i + 1}: no entry point to rank by`;
+    d.onclick = () => flashTo(it.c);
+    el.appendChild(d);
+  });
+  if (items.length > VERIFY_SHOWN) {
+    el.insertAdjacentHTML("beforeend", `<p class="note">+ ${items.length - VERIFY_SHOWN} more not listed.</p>`);
+  }
 }
 
 async function loadBrief(t) {
@@ -148,10 +239,11 @@ async function loadBrief(t) {
 }
 
 async function loadTile(t) {
+  if (pin) { map.removeLayer(pin); pin = null; }
   data = await (await fetch(`data/tile_${t}.geojson`)).json();
   const b = data.summary.bounds;
   map.fitBounds([[b[1], b[0]], [b[3], b[2]]]);
-  legend(); counts(); render(); entriesList(); loadBrief(t);
+  legend(); counts(); render(); entriesList(); verifyList(); loadBrief(t);
 }
 
 const sel = document.getElementById("tile");
