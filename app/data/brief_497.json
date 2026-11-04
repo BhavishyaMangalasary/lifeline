@@ -1,0 +1,14 @@
+{
+  "brief": "Enter (29.63024, -89.95027) for Priority 1, closest to 9 isolated buildings [F3]. Enter (29.63125, -89.95027) for Priority 2, closest to 8 isolated buildings [F4]. Enter (29.63390, -89.95065) for Priority 3, closest to 5 isolated buildings [F5]. Enter (29.63504, -89.95027) for Priority 4, closest to 2 isolated buildings [F6]. 105 road pieces were checked: 81 judged flooded, 24 uncertain, rest judged dry [F1]. Buildings: 26 isolated, 1 uncertain, 0 still reachable, 13 with no mapped road nearby [F2]. Testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was marked reachable, but about half marked isolated were reachable, so treat isolated as a reason to check not a confirmed cut-off [F7]. Flood judgements come from a vision model reading satellite photos, not field-verified, so uncertain roads need a drone or ground check [F8].",
+  "facts": {
+    "F1": "105 road pieces were checked: 81 judged flooded, 24 uncertain, the rest judged dry.",
+    "F2": "Buildings: 26 isolated (cut off from every exit road), 1 uncertain, 0 still reachable, 13 with no mapped road nearby.",
+    "F3": "Priority 1: enter at map reference (29.63024, -89.95027); a crew entering here is closest to 9 isolated buildings.",
+    "F4": "Priority 2: enter at map reference (29.63125, -89.95027); a crew entering here is closest to 8 isolated buildings.",
+    "F5": "Priority 3: enter at map reference (29.63390, -89.95065); a crew entering here is closest to 5 isolated buildings.",
+    "F6": "Priority 4: enter at map reference (29.63504, -89.95027); a crew entering here is closest to 2 isolated buildings.",
+    "F7": "In testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was marked reachable, but about half of the buildings marked isolated were in fact reachable. Treat 'isolated' as a reason to check, not a confirmed cut-off.",
+    "F8": "Flood judgements come from a vision model reading satellite photos and are not field-verified; uncertain roads need a drone or ground check."
+  },
+  "problems": []
+}

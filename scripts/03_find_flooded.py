@@ -19,3 +19,8 @@ best = per_tile.merge(mapping[["ImageId", "row"]], on="ImageId")
 best = best.sort_values("flooded_roads", ascending=False)
 print()
 print(best.head(10).to_string(index=False))
+
+best["dry_roads"] = best["total_roads"] - best["flooded_roads"]
+mixed = best[(best["flooded_roads"] >= 15) & (best["dry_roads"] >= 15)]
+print()
+print(mixed.sort_values("dry_roads", ascending=False).head(10).to_string(index=False))

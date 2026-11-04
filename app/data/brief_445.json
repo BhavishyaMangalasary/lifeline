@@ -1,0 +1,12 @@
+{
+  "brief": "Enter at map reference (29.64994, -89.96224) for Priority 1, closest to 9 isolated buildings [F3]. Enter at map reference (29.64878, -89.96243) for Priority 2, closest to 1 isolated building [F4]. Buildings: 10 isolated cut off from every exit road, 4 uncertain, 0 still reachable, 1 with no mapped road nearby [F2]. 56 road pieces were checked: 38 judged flooded, 5 uncertain, the rest judged dry [F1]. Flood judgements come from a vision model reading satellite photos and are not field-verified, and uncertain roads need a drone or ground check [F6]. In testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was marked reachable but about half of the buildings marked isolated were in fact reachable, and treat 'isolated' as a reason to check not a confirmed cut-off [F5].",
+  "facts": {
+    "F1": "56 road pieces were checked: 38 judged flooded, 5 uncertain, the rest judged dry.",
+    "F2": "Buildings: 10 isolated (cut off from every exit road), 4 uncertain, 0 still reachable, 1 with no mapped road nearby.",
+    "F3": "Priority 1: enter at map reference (29.64994, -89.96224); a crew entering here is closest to 9 isolated buildings.",
+    "F4": "Priority 2: enter at map reference (29.64878, -89.96243); a crew entering here is closest to 1 isolated building.",
+    "F5": "In testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was marked reachable, but about half of the buildings marked isolated were in fact reachable. Treat 'isolated' as a reason to check, not a confirmed cut-off.",
+    "F6": "Flood judgements come from a vision model reading satellite photos and are not field-verified; uncertain roads need a drone or ground check."
+  },
+  "problems": []
+}

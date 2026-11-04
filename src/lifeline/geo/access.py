@@ -1,6 +1,6 @@
 """Which buildings are cut off by flooded roads."""
 import networkx as nx
-
+import pandas as pd
 
 def _key(point):
     return (round(point[0], 1), round(point[1], 1))
@@ -60,4 +60,57 @@ def classify(roads, buildings, max_px=80, size=1300):
         piece.append(i)
     out["status"] = status
     out["piece"] = piece
+    return out
+
+def _dry_nodes(g, exits):
+    open_edges = [(u, v) for u, v, d in g.edges(data=True) if not d["flooded"]]
+    return _reaches_exit(g.edge_subgraph(open_edges), exits)
+
+
+def dispatch(roads, result):
+    g = build_graph(roads)
+    exits = exit_nodes(g)
+    sources = exits | _dry_nodes(g, exits)
+    dist, paths = nx.multi_source_dijkstra(g, sources, weight="time")
+
+    rows = []
+    for j, b in result[result["status"] == "isolated"].iterrows():
+        r = roads.loc[b["piece"]]
+        ends = [_key(r["geometry"].coords[0]), _key(r["geometry"].coords[-1])]
+        reachable = [n for n in ends if n in dist]
+        if not reachable:
+            continue
+        end = min(reachable, key=lambda n: dist[n])
+        rows.append({"building": j, "entry": paths[end][0], "eta_s": dist[end] + r["travel_time_s"] / 2})
+    if not rows:
+        return pd.DataFrame(), pd.DataFrame()
+
+    per_building = pd.DataFrame(rows)
+    groups = per_building.groupby("entry").agg(
+        buildings=("building", "count"), eta_s=("eta_s", "max")
+    ).reset_index()
+    groups["priority"] = groups["buildings"] / (groups["eta_s"] / 60 + 1)
+    groups = groups.sort_values("priority", ascending=False).reset_index(drop=True)
+    return groups, per_building
+
+def classify_uncertain(roads, buildings, states):
+    opt = roads.copy()
+    opt["flooded"] = [s == "flooded" for s in states]
+    pes = roads.copy()
+    pes["flooded"] = [s != "dry" for s in states]
+    a = classify(opt, buildings)
+    b = classify(pes, buildings)
+
+    out = a.copy()
+    final = []
+    for sa, sb in zip(a["status"], b["status"]):
+        if sa == "isolated":
+            final.append("isolated")
+        elif sb == "ok":
+            final.append("ok")
+        elif sa == "ok" and sb == "isolated":
+            final.append("uncertain")
+        else:
+            final.append(sa)
+    out["status"] = final
     return out

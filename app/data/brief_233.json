@@ -1,0 +1,14 @@
+{
+  "brief": "Priority 1 crew enter at map reference (29.68343, -90.09864) closest to 38 isolated buildings [F3].\nPriority 2 crew enter at map reference (29.67948, -90.10179) closest to 26 isolated buildings [F4].\nPriority 3 crew enter at map reference (29.68418, -90.09832) closest to 11 isolated buildings [F5].\nPriority 4 crew enter at map reference (29.68510, -90.09806) closest to 4 isolated buildings [F6].\nBuildings 87 isolated cut off from every exit road, 0 uncertain, 0 reachable, 2 with no mapped road nearby [F2].\n89 road pieces checked: 77 judged flooded, 9 uncertain, rest judged dry [F1].\nIn 5 SpaceNet 8 tiles none of 27 cut-off buildings marked reachable but about half marked isolated reachable so treat isolated as check not confirmed cut-off [F7].\nFlood judgements from vision model reading satellite photos not field-verified and uncertain roads need drone or ground check [F8].",
+  "facts": {
+    "F1": "89 road pieces were checked: 77 judged flooded, 9 uncertain, the rest judged dry.",
+    "F2": "Buildings: 87 isolated (cut off from every exit road), 0 uncertain, 0 still reachable, 2 with no mapped road nearby.",
+    "F3": "Priority 1: enter at map reference (29.68343, -90.09864); a crew entering here is closest to 38 isolated buildings.",
+    "F4": "Priority 2: enter at map reference (29.67948, -90.10179); a crew entering here is closest to 26 isolated buildings.",
+    "F5": "Priority 3: enter at map reference (29.68418, -90.09832); a crew entering here is closest to 11 isolated buildings.",
+    "F6": "Priority 4: enter at map reference (29.68510, -90.09806); a crew entering here is closest to 4 isolated buildings.",
+    "F7": "In testing on 5 SpaceNet 8 tiles, none of the 27 truly cut-off buildings was marked reachable, but about half of the buildings marked isolated were in fact reachable. Treat 'isolated' as a reason to check, not a confirmed cut-off.",
+    "F8": "Flood judgements come from a vision model reading satellite photos and are not field-verified; uncertain roads need a drone or ground check."
+  },
+  "problems": []
+}
