@@ -74,6 +74,7 @@
   <h2>Ask the map</h2>
   <form id="ask-form" style="display:none">
     <input id="ask-q" placeholder="Ask about the analysed tiles..." autocomplete="off">
+    <button type="button" id="ask-mic">Speak</button>
     <button type="submit">Ask</button>
   </form>
   <div id="ask-chips"></div>
@@ -299,6 +300,95 @@ document.getElementById("ask-form").onsubmit = async ev => {
     showAnswer(q, r, "Live answer from Muse Spark.");
   } catch (e) {
     el.innerHTML = "<p>The live agent could not be reached.</p>";
+  }
+};
+
+// ---- voice input (shown only with the live local server) ----
+const MIC_RATE = 24000;
+let rec = null;
+
+function resample(x, from, to) {
+  if (from === to) return x;
+  const n = Math.round(x.length * to / from);
+  const y = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const p = i * from / to;
+    const i0 = Math.floor(p);
+    const i1 = Math.min(i0 + 1, x.length - 1);
+    const f = p - i0;
+    y[i] = x[i0] * (1 - f) + x[i1] * f;
+  }
+  return y;
+}
+
+function toInt16(f32) {
+  const out = new Int16Array(f32.length);
+  for (let i = 0; i < f32.length; i++) {
+    const s = Math.max(-1, Math.min(1, f32[i]));
+    out[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+  }
+  return out;
+}
+
+async function startRecording() {
+  const stream = await navigator.mediaDevices.getUserMedia({audio: {channelCount: 1}});
+  const ctx = new AudioContext({sampleRate: MIC_RATE});
+  const src = ctx.createMediaStreamSource(stream);
+  const proc = ctx.createScriptProcessor(4096, 1, 1);
+  const chunks = [];
+  proc.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  src.connect(proc);
+  proc.connect(ctx.destination);
+  rec = {stream, ctx, src, proc, chunks};
+}
+
+async function stopRecording() {
+  const {stream, ctx, src, proc, chunks} = rec;
+  rec = null;
+  proc.disconnect();
+  src.disconnect();
+  stream.getTracks().forEach(t => t.stop());
+  const rate = ctx.sampleRate;
+  await ctx.close();
+  let total = 0;
+  chunks.forEach(c => { total += c.length; });
+  const all = new Float32Array(total);
+  let off = 0;
+  chunks.forEach(c => { all.set(c, off); off += c.length; });
+  return toInt16(resample(all, rate, MIC_RATE));
+}
+
+const micBtn = document.getElementById("ask-mic");
+micBtn.onclick = async () => {
+  const box = document.getElementById("ask-answer");
+  try {
+    if (!rec) {
+      await startRecording();
+      micBtn.textContent = "Stop";
+      box.innerHTML = "<p>Listening... press Stop when you finish your question.</p>";
+      box.style.display = "block";
+      return;
+    }
+    micBtn.disabled = true;
+    micBtn.textContent = "Transcribing...";
+    const pcm = await stopRecording();
+    const r = await (await fetch("transcribe", {
+      method: "POST",
+      headers: {"Content-Type": "application/octet-stream"},
+      body: pcm.buffer
+    })).json();
+    if (r.text) {
+      document.getElementById("ask-q").value = r.text;
+      document.getElementById("ask-form").requestSubmit();
+    } else {
+      box.innerHTML = `<p>${esc(r.error || "I did not catch that. Try again.")}</p>`;
+    }
+  } catch (e) {
+    box.innerHTML = "<p>Microphone or transcription failed. Check microphone permission for this page.</p>";
+    box.style.display = "block";
+    rec = null;
+  } finally {
+    if (!rec) { micBtn.disabled = false; micBtn.textContent = "Speak"; }
   }
 };
 
